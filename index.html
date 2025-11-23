@@ -1,177 +1,200 @@
-
 <!DOCTYPE html>
 <html lang="mr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kisan Card</title>
-  
-  <!-- Tailwind CDN -->
+  <title>Kisan Card - Upgraded</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- html2canvas CDN -->
+
+  <!-- html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- jsPDF CDN -->
+
+  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     .card-box {
       width: 860px;
       height: 540px;
-      border: 5px solid #1b8f2e;
-      border-radius: 4px;
+      border: 5px solid #128c2f;
+      border-radius: 6px;
+      background: #fff;
       position: relative;
       overflow: hidden;
-      background: white;
+      transform-origin: top left;
     }
-    .top-strip {
-      background: linear-gradient(to right,#0d8f2e,#4CAF50);
-      padding: 12px;
-      border-bottom: 3px solid #1b8f2e;
+
+    @media(max-width:1000px){
+      .card-box { transform: scale(0.55); }
     }
-    .inner-light-border {
-      border: 2px solid #97d7a7;
-      margin: 10px;
-      height: calc(100% - 20px);
+    @media(max-width:700px){
+      .card-box { transform: scale(0.45); }
     }
-    /* Watermark style */
+    @media(max-width:500px){
+      .card-box { transform: scale(0.38); }
+    }
+
     .watermark {
-      opacity: 0.10;
+      opacity: 0.05;
       position: absolute;
       inset: 0;
-      z-index: 0; /* Back layer */
-      pointer-events: none;
       display: flex;
       justify-content: center;
       align-items: center;
+      pointer-events: none;
     }
   </style>
 </head>
 
-<body class="bg-gray-100 p-6">
-<!-- INPUT BOX -->
-<div class="max-w-4xl mx-auto bg-white shadow p-4 mb-6 border rounded">
-  <h2 class="text-xl text-center font-bold text-green-700 mb-4">Kisan Card Generator</h2>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <input id="inpName" class="p-2 border rounded" placeholder="Farmer Name" />
-    <input id="inpFid" class="p-2 border rounded" placeholder="Farmer ID" />
-    <input id="inpAad" maxlength="12" class="p-2 border rounded" placeholder="Aadhaar Number" />
-    <input id="inpMob" maxlength="10" class="p-2 border rounded" placeholder="Mobile Number" />
+<body class="bg-gray-100 p-4">
+
+<!-- INPUT SECTION -->
+<div class="max-w-4xl mx-auto bg-white shadow p-5 mb-6 border rounded">
+  <h2 class="text-2xl font-bold text-center text-green-700 mb-4">Kisan Card Generator (Upgraded)</h2>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <input id="inpName" class="p-2 border rounded" placeholder="Farmer Name">
+    <input id="inpFid" class="p-2 border rounded" placeholder="Farmer ID">
+
+    <input id="inpAad" maxlength="12" class="p-2 border rounded" placeholder="Aadhaar Number">
+    <input id="inpMob" maxlength="10" class="p-2 border rounded" placeholder="Mobile Number">
+
     <div>
-      <label class="font-semibold text-sm">Upload Photo</label>
-      <input id="inpPhoto" type="file" class="w-full" accept="image/*" />
+      <label class="font-semibold text-sm">Photo Upload</label>
+      <input id="inpPhoto" type="file" accept="image/*" class="w-full">
     </div>
     <div>
-      <label class="font-semibold text-sm">Upload Logo (Watermark)</label>
-      <input id="inpLogo" type="file" class="w-full" accept="image/*" />
+      <label class="font-semibold text-sm">Logo (Watermark)</label>
+      <input id="inpLogo" type="file" accept="image/*" class="w-full">
     </div>
   </div>
+
   <div class="flex gap-3 mt-4">
     <button onclick="applyData()" class="flex-1 bg-green-600 text-white py-2 rounded">Generate</button>
     <button onclick="downloadPDF()" class="flex-1 bg-blue-600 text-white py-2 rounded">Download PDF</button>
+    <button onclick="printCard()" class="flex-1 bg-purple-600 text-white py-2 rounded">Print</button>
   </div>
 </div>
 
 <!-- CARD -->
-<div id="cardWrap" class="mx-auto card-box relative" style="position:relative">
-  <div class="inner-light-border" style="position:relative">
+<div id="cardWrap" class="card-box mx-auto">
+  
+  <div class="bg-green-700 text-white py-3 px-5 flex items-center">
+    <img id="logoImg" class="h-16 bg-white rounded" />
+    <span class="ml-5 text-4xl font-bold">किसान कार्ड</span>
+  </div>
 
-    <!-- TOP STRIP -->
-    <div class="top-strip flex items-center relative" style="z-index:2">
-      <img id="logoImg" src="" class="h-16" style="background:#0b931a" />
-      <span class="text-white font-extrabold text-4xl ml-6 drop-shadow">किसान कार्ड</span>
+  <div class="p-6 grid grid-cols-2 text-lg">
+    <div>
+      <p class="text-green-700 font-bold">Farmer Name</p>
+      <p id="cardName" class="mb-3"></p>
+
+      <p class="text-green-700 font-bold">Farmer ID</p>
+      <p id="cardFid" class="mb-3"></p>
+
+      <p class="text-green-700 font-bold">Aadhaar Number</p>
+      <p id="cardAad" class="mb-3"></p>
+
+      <p class="text-green-700 font-bold">Mobile Number</p>
+      <p id="cardMob" class="mb-3"></p>
     </div>
-    <!-- CONTENT -->
-    <div class="p-6 grid grid-cols-2 text-lg relative" style="z-index:2">
-      <div>
-        <p class="text-green-700 font-bold">Farmer Name:-</p>
-        <p id="cardName" class="mb-3"></p>
-        <p class="text-green-700 font-bold">Farmer ID:-</p>
-        <p id="cardFid" class="mb-3"></p>
-        <p class="text-green-700 font-bold">Aadhaar Number:-</p>
-        <p id="cardAad" class="mb-3"></p>
-        <p class="text-green-700 font-bold">Mobile Number:-</p>
-        <p id="cardMob" class="mb-3"></p>
+
+    <div class="flex flex-col items-end">
+      <div class="w-32 h-40 border shadow bg-gray-100 overflow-hidden">
+        <img id="cardPhoto" class="w-full h-full object-cover">
       </div>
-      <div class="flex flex-col items-end">
-        <!-- PHOTO BOX -->
-        <div class="w-32 h-40 border shadow bg-gray-100 overflow-hidden">
-          <img id="cardPhoto" class="w-full h-full object-cover" />
-        </div>
-        <p class="mt-2 text-sm font-semibold text-right">Approval Status</p>
-        <p class="text-green-700 font-bold text-right">APPROVED</p>
-      </div>
-    </div>
-
-    <!-- CENTER WATERMARK (PDF + Preview) -->
-    <div class="watermark" id="wm">
-      <img id="wmLogo" src="" class="w-96" />
-    </div>
-
-    <!-- BOTTOM NOTE -->
-    <div class="absolute bottom-0 w-full text-center py-2 text-green-800 text-sm border-t border-green-700 bg-white" style="z-index:2">
-      टीप :- हे कार्ड शेतकरी कामासाठी तात्पुरत्या स्वरूपात बनवले आहे..
+      <p class="mt-2 text-green-700 font-bold text-right">APPROVED</p>
     </div>
   </div>
+
+  <div class="watermark"><img id="wmLogo" class="w-96"></div>
+
+  <div class="absolute bottom-0 w-full text-center py-2 text-green-900 bg-gray-100 border-t">
+    टीप :- हे कार्ड शेतकरी कामासाठी तात्पुरत्या स्वरूपात बनवले आहे.
+  </div>
+
 </div>
 
 <script>
 function applyData(){
+  /* Basic Validation */
+  if(inpAad.value.length !== 12) alert("Aadhaar must be 12 digits");
+  if(inpMob.value.length !== 10) alert("Mobile must be 10 digits");
+
   cardName.innerText = inpName.value;
   cardFid.innerText = inpFid.value;
   cardAad.innerText = inpAad.value;
   cardMob.innerText = inpMob.value;
 
-  // User photo
+  /* Photo */
   const f = inpPhoto.files[0];
   if (f){
-    const reader = new FileReader();
-    reader.onload = e => {
-      cardPhoto.src = e.target.result;
-    };
-    reader.readAsDataURL(f);
-  } else {
-    cardPhoto.src = "";
+    const r = new FileReader();
+    r.onload = e => cardPhoto.src = e.target.result;
+    r.readAsDataURL(f);
   }
-  // Logo (top and watermark)
-  const logo = inpLogo.files[0];
-  if (logo){
-    const reader2 = new FileReader();
-    reader2.onload = e => {
+
+  /* Logo + Watermark */
+  const l = inpLogo.files[0];
+  if (l){
+    const r2 = new FileReader();
+    r2.onload = e => {
       logoImg.src = e.target.result;
       wmLogo.src = e.target.result;
     };
-    reader2.readAsDataURL(logo);
-  } else {
-    logoImg.src = "";
-    wmLogo.src = "";
+    r2.readAsDataURL(l);
   }
 }
 
+/* -------- PDF DOWNLOAD ---------- */
 async function downloadPDF(){
-  applyData();
-  await new Promise(r => setTimeout(r, 100)); // rendering fix
-
-  // Watermark लपवत नाही – direct pdf चालेल
+  await applyData();
+  await new Promise(r=>setTimeout(r,100));
 
   const card = document.getElementById("cardWrap");
-  const canvas = await html2canvas(card, {
-    scale: 3,
-    useCORS: true,
-    allowTaint: true,
-    logging: false
-  });
+  const cnv = await html2canvas(card, {scale:3});
+  const img = cnv.toDataURL("image/png");
 
-  const imgData = canvas.toDataURL("image/png");
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({
-    orientation: "landscape",
-    unit: "mm",
-    format: [86, 54]
+    orientation:"landscape",
+    unit:"mm",
+    format:[86,54]   // Standard ID Card
   });
 
-  pdf.addImage(imgData, "PNG", 0, 0, 86, 54);
-  pdf.save(`KisanCard_${Date.now()}.pdf`);
+  pdf.addImage(img,"PNG",0,0,86,54);
+  pdf.save("KisanCard.pdf");
+}
+
+/* -------- PRINT FEATURE ---------- */
+async function printCard(){
+  const size = prompt("Print Size?\n1 = A4\n2 = ID Card (86×54 mm)\n3 = Custom (mm)\n\nEnter 1/2/3");
+
+  let widthMM = 210, heightMM = 297; // Default A4
+
+  if(size == "2"){
+    widthMM = 86; heightMM = 54;
+  }
+  else if(size == "3"){
+    widthMM = prompt("Enter Width (mm):");
+    heightMM = prompt("Enter Height (mm):");
+  }
+
+  const card = document.getElementById("cardWrap");
+  const canvas = await html2canvas(card, {scale:3});
+  const img = canvas.toDataURL("image/png");
+
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(`
+    <html><body style="margin:0; text-align:center">
+      <img src="${img}" style="width:${widthMM}mm; height:${heightMM}mm;">
+      <script>window.print();<\/script>
+    </body></html>
+  `);
 }
 </script>
+
 </body>
 </html>
